@@ -2,6 +2,7 @@
 
 class PipelineDealsClient {
 	private $api_key;
+	public $debug = false;
 	private $last_response_headers;
 
 	public function __construct($api_key) {
@@ -17,15 +18,15 @@ class PipelineDealsClient {
 
 		$response = $this->curlHttpApiRequest($method, $url, $payload, $request_headers);
 		$response = json_decode($response, true);
-
 		if (isset($response['errors']) or ($this->last_response_headers['http_status_code'] >= 400))
 			throw new ClientApiException($method, $path, $params, $this->last_response_headers, $response);
 
-		return (is_array($response) and (count($response) > 0)) ? array_shift($response) : $response;
+		return $response;
 	}
 
 	private function curlHttpApiRequest($method, $url, $payload='', $request_headers=array())
 	{
+
 		$ch = curl_init($url);
 		$this->curlSetopts($ch, $method, $payload, $request_headers);
 		$response = curl_exec($ch);
@@ -52,11 +53,11 @@ class PipelineDealsClient {
 		curl_setopt($ch, CURLOPT_USERAGENT, 'HAC');
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-
+		if ($this->debug)
+			curl_setopt($ch, CURLOPT_VERBOSE, true);
+		
 		if ('GET' == $method)
-		{
 			curl_setopt($ch, CURLOPT_HTTPGET, true);
-		}
 		else
 		{
 			curl_setopt ($ch, CURLOPT_CUSTOMREQUEST, $method);
